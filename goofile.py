@@ -33,10 +33,15 @@ def run(dmn,file):
  google_domain = 'www.google.com'
  search_query = "/search?&q=site:"+ dmn + "+filetype:" + file + "&filter=0"
  url = 'http://' + google_domain + search_query
- data = requests.get(url)
- print data.text
- buf = [ url for url  in  re.findall('url\?q=(.+?)&',data.text) ]
- return buf
+ try:
+  data = requests.get(url,timeout=20)
+ except :
+  print "Error loading url %s\n"  % url
+  sys.exit(1)
+
+ return [ url for url  in  re.findall('url\?q=(.+?)&',data.text) ]
+
+
 
 def search(argv):
 	if len(sys.argv) < 2: 
@@ -60,23 +65,25 @@ def search(argv):
         data = run(dmn,file)
 	for x in data:
          if re.search("\.%s$" % file, x,re.UNICODE ):
-          print x
 	  if result.count(x) == 0:
            result.append(x)
-	
-			
 
         print "\nFiles found:"
 	print "====================\n"
 	if result==[]:
-		print "No results were found"
+	 print "No results were found"
 	else:
-         for x in result:
-          print x
-	  print "====================\n"
+         print "\n" .join( [ x for x in result ])
+          
 	
 
 if __name__ == "__main__":
-        print sys.argv[1:]
-        search(sys.argv[1:])
+ try:
+  search(sys.argv[1:])
+ except KeyboardInterrupt:
+  print "Search interrupted by user.."
+  sys.exit(1)
+
+        
+
 	
