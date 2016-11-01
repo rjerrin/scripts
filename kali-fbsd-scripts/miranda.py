@@ -83,10 +83,10 @@ class upnp:
 	ssock = False
         MYTTL = 2 
 
-	def __init__(self,ip,port,iface,appCommands):
+	def __init__(self,ip,port,appCommands):
 		if appCommands:
 			self.completer = cmdCompleter(appCommands)
-		if self.initSockets(ip,port,iface) == False:
+		if self.initSockets(ip,port) == False:
 			print 'UPNP class initialization failed!'
 			print 'Bye!'
 			sys.exit(1)
@@ -94,7 +94,7 @@ class upnp:
 			self.soapEnd = re.compile('<\/.*:envelope>')
 
 	#Initialize default sockets
-	def initSockets(self,ip,port,iface):
+	def initSockets(self,ip,port):
 		if self.csock:
 			self.csock.close()
 		if self.ssock:
@@ -110,17 +110,11 @@ class upnp:
 		try:
                         self.addrinfo = getaddrinfo(self.ip,None)[0]
                         ttl_bin = struct.pack('@i',self.MYTTL)
-                        
-			#This is needed to join a multicast group
-			self.mreq = struct.pack("4sl",inet_aton(ip),INADDR_ANY)
-
-			#Set up client socket
                         self.csock = socket(self.addrinfo[0], SOCK_DGRAM)
                         if self.addrinfo[0] == AF_INET: # IPv4
                                 self.csock.setsockopt(IPPROTO_IP, IP_MULTICAST_TTL, ttl_bin)
                         else:
-                                s.setsockopt(IPPROTO_IPV6,IPV6_MULTICAST_HOPS, ttl_bin)
-			        self.csock.setsockopt(IPPROTO_IPV6,IPV6_MULTICAST_HOPS,ttl_bin)
+                                self.csock.setsockopt(IPPROTO_IPV6,IPV6_MULTICAST_HOPS,ttl_bin)
 			
 			#Set up server socket
 			self.ssock = socket(self.addrinfo[0],SOCK_DGRAM)
@@ -136,7 +130,6 @@ class upnp:
                                 group_bin = inet_pton(self.addrinfo[0], self.addrinfo[4][0])
                                 if self.addrinfo[0] == AF_INET:
                                         mreq = group_bin + struct.pack('=I', INADDR_ANY)
-                                        print mreq
                                         self.ssock.setsockopt(IPPROTO_IP,IP_ADD_MEMBERSHIP,mreq)
                                 else:
                                         mreq = group_bin + struct.pack('@I', 0)
@@ -297,6 +290,7 @@ class upnp:
 				messageType = False
 
 		#If this is a notification or a reply message...
+
 		if messageType != False:
 			#Get the host name and location of it's main UPNP XML file
 			xmlFile = self.parseHeader(data,"LOCATION")
@@ -924,7 +918,7 @@ def seti(argc,argv,hp):
 					hp.ip = ip
 					hp.port = port
 					hp.cleanup()
-					if hp.initSockets(ip,port,hp.IFACE) == False:
+					if hp.initSockets(ip,port) == False:
 						print "Setting new socket %s:%d failed!" % (ip,port)
 					else:
 						print "Using new socket: %s:%d" % (ip,port)
@@ -1526,7 +1520,7 @@ def parseCliOpts(argc,argv,hp):
 			elif opt == '-h':
 				usage()
 
-                hp.initSockets(False,False,None)
+                hp.initSockets(False,False)
 
 #Toggle boolean values
 def toggleVal(val):
@@ -1626,7 +1620,7 @@ def main(argc,argv):
                 appCommands['load'][file] = None
 
 	#Initialize upnp class
-	hp = upnp(False,False,None,appCommands);
+	hp = upnp(False,False,appCommands);
 
 	#Set up tab completion and command history
 	readline.parse_and_bind("tab: complete")
