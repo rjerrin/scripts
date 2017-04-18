@@ -24,7 +24,7 @@ do
         echo "set RHOSTS $ip" >> $file
         echo "set VHOST $host" >> $file
         echo "set RPORT $port" >> $file
-        echo "set USERNAME madhavi" >> $file 
+        echo "set USERNAME username" >> $file 
         echo "set PASSWORD sdlkashd" >> $file
         if [ $port == "443" ];
         then
